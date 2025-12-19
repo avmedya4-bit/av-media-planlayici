@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>AV Media Planlayıcı</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #0f172a;
+    margin: 0;
+    padding: 20px;
+    color: #e5e7eb;
+}
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+header h1 {
+    font-size: 32px;
+    margin: 0;
+}
+header span {
+    color: #38bdf8;
+    font-size: 14px;
+}
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+.day {
+    background: #020617;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+.day h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 8px;
+}
+.add {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.add input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+}
+.add button {
+    background: #38bdf8;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.task {
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+.task strong {
+    display: block;
+    margin-bottom: 6px;
+}
+.task label {
+    font-size: 13px;
+    margin-right: 8px;
+}
+.completed {
+    border-left: 4px solid #22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>AV Media Planlayıcı</h1>
+    <span>Çekim • Kurgu • Ödeme Takip Sistemi</span>
+</header>
+
+<div class="container" id="days"></div>
+
+<script>
+const daysOfWeek = [
+ "Pazartesi","Salı","Çarşamba",
+ "Perşembe","Cuma","Cumartesi","Pazar"
+];
+
+let data = JSON.parse(localStorage.getItem("avmedia")) || {};
+const container = document.getElementById("days");
+
+daysOfWeek.forEach(day => {
+    if (!data[day]) data[day] = [];
+
+    const card = document.createElement("div");
+    card.className = "day";
+    card.innerHTML = `
+        <h3>${day}</h3>
+        <div class="add">
+            <input type="text" placeholder="Yeni çekim ekle">
+            <button>Ekle</button>
+        </div>
+        <div class="list"></div>
+    `;
+    container.appendChild(card);
+
+    const input = card.querySelector("input");
+    const btn = card.querySelector("button");
+    const list = card.querySelector(".list");
+
+    function render() {
+        list.innerHTML = "";
+        data[day].forEach((t,i)=>{
+            const done = t.shoot && t.edit && t.pay ? "completed" : "";
+            list.innerHTML += `
+                <div class="task ${done}">
+                    <strong>${t.name}</strong>
+                    <label><input type="checkbox" ${t.shoot?"checked":""} onchange="toggle('${day}',${i},'shoot')"> Çekim</label>
+                    <label><input type="checkbox" ${t.edit?"checked":""} onchange="toggle('${day}',${i},'edit')"> Düzenleme</label>
+                    <label><input type="checkbox" ${t.pay?"checked":""} onchange="toggle('${day}',${i},'pay')"> Ödeme</label>
+                </div>
+            `;
+        });
+        localStorage.setItem("avmedia", JSON.stringify(data));
+    }
+
+    btn.onclick = ()=>{
+        if(!input.value.trim()) return;
+        data[day].push({name:input.value, shoot:false, edit:false, pay:false});
+        input.value="";
+        render();
+    }
+
+    render();
+});
+
+function toggle(day,i,key){
+    data[day][i][key] = !data[day][i][key];
+    localStorage.setItem("avmedia", JSON.stringify(data));
+}
+</script>
+
+</body>
+</html>
